@@ -2,7 +2,7 @@
 %bcond tests 1
 
 Name:		python-sqlmodel
-Version:	0.0.31
+Version:	0.0.32
 Release:	1
 Summary:	SQL databases in Python, designed for simplicity, compatibility, and robustness
 URL:		https://pypi.org/project/sqlmodel/
@@ -23,9 +23,11 @@ BuildRequires:	python%{pyver}dist(wheel)
 BuildRequires:	python%{pyver}dist(black)
 BuildRequires:	python%{pyver}dist(jinja2)
 BuildRequires:	python%{pyver}dist(dirty-equals)
-#BuildRequires:	python%%{pyver}dist(fastapi)
-#BuildRequires:	python%%{pyver}dist(httpx)
+BuildRequires:	python%{pyver}dist(fastapi)
+BuildRequires:	python%{pyver}dist(httpx)
 BuildRequires:	python%{pyver}dist(pytest)
+BuildRequires:	python%{pyver}dist(pre-commit)
+BuildRequires:	python%{pyver}dist(typing-extensions)
 %endif
 
 %description
@@ -40,22 +42,19 @@ Pydantic and SQLAlchemy.
 %prep -a
 # Remove bundled egg-info
 rm -rf %{module}.egg-info
-# sqlmodel is required to build fastapi, we cannot test fastapi if is not-
-# packaged yet, remove the tests to pass the check
-rm -rf tests/test_tutorial/test_fastapi/
-rm -rf docs_src/tutorial/fastapi/
-
 
 %if %{with tests}
 %check
-# sqlmodel is required to build fastapi, we cannot test fastapi if is not-
-# packaged yet, remove the tests to pass the check
-# ignore some pydantic model tests
-ignore="${k-}${k+ and }not test_select_gen and not test_fastapi and not test_json_schema_flat_model_pydantic_v2 and not test_json_schema_inherit_model_pydantic_v2 and not test_create_db_and_table"
-warningsfilter="${warningsfilter-} -W ignore::DeprecationWarning"
+# remove sqlmodel tests that require old python versions which cause-
+# test failures
+rm -rf docs_src/tutorial/fastapi/app_testing/tutorial001_py{39,310}/test*.py \
+	tests/test_tutorial/test_fastapi/test_app_testing/test*.py \
+	tests/test_select_gen.py \
+	tests/test_tutorial/test_create_db_and_table/test_tutorial001*.py
+
 export CI=true
-export PYTHONPATH="%{buildroot}%{python3_sitelib}:${PWD}"
-pytest -v ${warningsfilter-} -k "${ignore-}" -rs
+export PYTHONPATH="%{buildroot}%{python_sitelib}:${PWD}"
+pytest
 %endif
 
 %files
