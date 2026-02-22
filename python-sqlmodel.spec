@@ -2,7 +2,7 @@
 %bcond tests 1
 
 Name:		python-sqlmodel
-Version:	0.0.35
+Version:	0.0.37
 Release:	1
 Summary:	SQL databases in Python, designed for simplicity, compatibility, and robustness
 URL:		https://pypi.org/project/sqlmodel/
